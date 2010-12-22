@@ -10,21 +10,21 @@ import pymc as mc
 import networkx as nx
 import random
 
-def BDST(n=25, k=5, beta=1.):
-    """ Create a PyMC Stochastic for a Bounded Depth Spanning Tree
+def BDST(G, k=5, beta=1.):
+    """ Create a PyMC Stochastic for a Bounded Depth Spanning Tree on
+    base graph G
+
     Parameters
     ----------
-    n : int, size of graph
+    G : nx.Graph, base graph to span
     k : int, depth bound parameter
     beta : float, "inverse-temperature parameter" for depth bound
     """
 
-    G = nx.Graph()
-    G.add_path(range(n))  # start with a path for now
-    G.pos = nx.spring_layout(G)
+    T = nx.minimum_spanning_tree(G)
 
     @mc.stoch(dtype=nx.Graph)
-    def bdst(value=G, k=k, beta=beta):
+    def bdst(value=T, G=G, k=k, beta=beta):
         path_len = pl.array(nx.shortest_path_length(value, 0).values())
         return -beta * pl.sum(path_len > k)
 
@@ -37,28 +37,32 @@ class BDSTMetropolis(mc.Metropolis):
 
     def propose(self):
         """ Add an edge and remove an edge from the cycle that it creates"""
-        G = self.stochastic.value
+        T = self.stochastic.value
+        G = self.stochastic.parents['G']
 
-        self.u_new, self.v_new = random.sample(G.nodes(), 2)
+        T.u_new, T.v_new = random.sample(T.edges(), 1)[0]
 
-        path = nx.shortest_path(G, self.u_new, self.v_new)
+        path = nx.shortest_path(T, T.u_new, T.v_new)
         i = random.randrange(len(path)-1)
-        self.u_old, self.v_old = path[i], path[i+1]
+        T.u_old, T.v_old = path[i], path[i+1]
         
-        G.remove_edge(self.u_old, self.v_old)
-        G.add_edge(self.u_new, self.v_new)
-        self.stochastic.value = G
+        T.remove_edge(T.u_old, T.v_old)
+        T.add_edge(T.u_new, T.v_new)
+        self.stochastic.value = T
 
     def reject(self):
         """ Restore the graph to its state before more recent edge swap"""
-        G = self.stochastic.value
-        G.add_edge(self.u_old, self.v_old)
-        G.remove_edge(self.u_new, self.v_new)
-        self.stochastic.value = G
+        T = self.stochastic.value
+        T.add_edge(T.u_old, T.v_old)
+        T.remove_edge(T.u_new, T.v_new)
+        self.stochastic.value = T
         
 def anneal(n=25, k=5):
     beta = mc.Uninformative('beta', value=1.)
-    bdst = BDST(n=n, k=k, beta=beta)
+
+    G = nx.complete_graph(n)
+    G.pos = nx.spring_layout(G, fixed=[0], iterations=1)
+    bdst = BDST(G, k, beta)
 
     mod_mc = mc.MCMC([beta, bdst])
     mod_mc.use_step_method(BDSTMetropolis, bdst)
@@ -66,26 +70,32 @@ def anneal(n=25, k=5):
 
 
     ni = 5
-    nj = 10
-    nk = 10
+    nj = 100
+    nk = 3
 
     for i in range(1, ni):
-        beta.value = i
+        beta.value = i*5
         for j in range(nj):
             mod_mc.sample(1)
-            G = bdst.value
-            G.pos = nx.spring_layout(G, pos=G.pos, fixed=[0], iterations=1)
+            T = bdst.value
             
             for k in range(nk):
+                if k < .9*nk:
+                    G.pos = nx.spring_layout(T, pos=G.pos, fixed=[0], iterations=1)
+
                 pl.clf()
-                nx.draw_networkx_edges(G, G.pos, alpha=.5, width=2)
+                nx.draw_networkx_edges(T, G.pos, alpha=.5, width=2)
                 X = pl.array(G.pos.values())
                 pl.plot(X[:,0], X[:,1], 'o', alpha=.5)
+
+                pl.plot(X[[T.u_old, T.v_old], 0], X[[T.u_old, T.v_old], 1], 'r-', linewidth=4, alpha=(nk - k) * .5 / nk)
+                pl.plot(X[[T.u_new, T.v_new], 0], X[[T.u_new, T.v_new], 1], 'b-', linewidth=4, alpha=.25 + k*.5/nk)
+                
+                pl.figtext(0, 0, 'cur depth: %d\naccepted: %d\n' % (max(nx.shortest_path_length(bdst.value, 0).values()), mod_mc.step_method_dict[bdst][0].accepted))
                 pl.axis([-3, 3, -3, 3])
                 pl.axis('off')
                 pl.subplots_adjust(0, 0, 1, 1)
-                pl.savefig('t%3d.png' % (i*nj*nk + j*nk + k))
-        print 'accepted:', mod_mc.step_method_dict[bdst][0].accepted
-        print 'cur depth:', max(nx.shortest_path_length(bdst.value, 0).values())
+                pl.savefig('t%06d.png' % (i*nj*nk + j*nk + k))
+            print 'accepted:', mod_mc.step_method_dict[bdst][0].accepted
 
     return bdst.value

@@ -85,7 +85,8 @@ def anneal_experiment(n=11, depth=10):
     @mc.deterministic
     def max_depth(T=bdst, root=root):
         shortest_path_length = nx.shortest_path_length(T, root)
-        return max(shortest_path_length)
+        T.max_depth = max(shortest_path_length.values())
+        return T.max_depth
 
     mod_mc = mc.MCMC([beta, bdst, max_depth])
     mod_mc.use_step_method(BDSTMetropolis, bdst)
@@ -96,8 +97,10 @@ def anneal_experiment(n=11, depth=10):
     for i in range(ni):
         beta.value = i*5
         mod_mc.sample(1000, thin=10)
+        print 'cur depth', max_depth.value
         print 'pct of trace with max_depth <= depth', pl.mean(max_depth.trace() <= depth)
-        
+    return bdst.value
+
 def anneal_graphics(n=11, depth=10):
     beta = mc.Uninformative('beta', value=1.)
 

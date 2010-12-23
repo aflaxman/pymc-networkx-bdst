@@ -70,10 +70,9 @@ class BDSTMetropolis(mc.Metropolis):
         T.remove_edge(T.u_new, T.v_new)
         self.stochastic.value = T
 
-def my_path_graph(path):
-    G = nx.Graph()
-    G.add_path(path)
-    return G
+ni = 5
+nj = 100
+nk = 5
 
 def anneal_experiment(n=11, depth=10):
     beta = mc.Uninformative('beta', value=1.)
@@ -96,10 +95,16 @@ def anneal_experiment(n=11, depth=10):
 
     for i in range(ni):
         beta.value = i*5
-        mod_mc.sample(1000, thin=10)
+        mod_mc.sample(nj, thin=10)
         print 'cur depth', max_depth.value
         print 'pct of trace with max_depth <= depth', pl.mean(max_depth.trace() <= depth)
     return bdst.value
+
+
+def my_path_graph(path):
+    G = nx.Graph()
+    G.add_path(path)
+    return G
 
 def anneal_graphics(n=11, depth=10):
     beta = mc.Uninformative('beta', value=1.)
@@ -115,11 +120,6 @@ def anneal_graphics(n=11, depth=10):
     mod_mc.use_step_method(BDSTMetropolis, bdst)
     mod_mc.use_step_method(mc.NoStepper, beta)
 
-
-    ni = 5
-    nj = 100
-    nk = 5
-
     for i in range(ni):
         beta.value = i*5
         for j in range(nj):
@@ -127,7 +127,7 @@ def anneal_graphics(n=11, depth=10):
             T = bdst.value
             
             for k in range(nk):
-                if random.random() < .75:
+                if random.random() < .95:
                     delta_pos = nx.spring_layout(T, pos=G.pos, fixed=[root], iterations=1)
                 else:
                     delta_pos = G.orig_pos
@@ -145,7 +145,7 @@ def anneal_graphics(n=11, depth=10):
 
                 # display the most recently swapped edges
                 P = my_path_graph(T.path)
-                nx.draw_networkx_edges(P, G.pos, alpha=.25 + (nk-k)*.5/nk, width=4, edge_color='g')
+                nx.draw_networkx_edges(P, G.pos, alpha=.25 + (nk-k)*.5/nk, width=4, edge_color='c')
                 P = my_path_graph([T.u_new, T.v_new])
                 P.add_edge(T.u_old, T.v_old)
                 nx.draw_networkx_edges(P, G.pos, alpha=.25 + k*.5/nk, width=4, edge_color='y')
@@ -154,8 +154,12 @@ def anneal_graphics(n=11, depth=10):
                 path = nx.shortest_path(bdst.value, root)
                 furthest_leaf = max(path, key=lambda l: len(path[l]))
                 P = my_path_graph(path[furthest_leaf])
-                nx.draw_networkx_edges(P, G.pos, alpha=.5, width=4, edge_color='r')
-                pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color='r', alpha=.8, fontsize=9)
+                if len(path[furthest_leaf]) <= depth:
+                    col = 'g'
+                else:
+                    col = 'r'
+                nx.draw_networkx_edges(P, G.pos, alpha=.5, width=4, edge_color=col)
+                pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color=col, alpha=.8, fontsize=9)
                 str = ''
                 str += ' beta: %.1f\n' % beta.value
                 str += ' cur depth: %d (target: %d)\n' % (len(path[furthest_leaf]), depth)

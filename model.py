@@ -9,7 +9,8 @@ import pylab as pl
 import pymc as mc
 import networkx as nx
 import random
-
+import graphics
+reload(graphics)
 def BDST(G, root=0, k=5, beta=1.):
     """ Create a PyMC Stochastic for a Bounded Depth Spanning Tree on
     base graph G
@@ -23,6 +24,8 @@ def BDST(G, root=0, k=5, beta=1.):
 
     T = nx.minimum_spanning_tree(G)
     T.base_graph = G
+    T.root = root
+    T.k = k
 
     @mc.stoch(dtype=nx.Graph)
     def bdst(value=T, root=root, k=k, beta=beta):
@@ -101,11 +104,6 @@ def anneal_experiment(n=11, depth=10):
     return bdst.value
 
 
-def my_path_graph(path):
-    G = nx.Graph()
-    G.add_path(path)
-    return G
-
 def anneal_graphics(n=11, depth=10):
     beta = mc.Uninformative('beta', value=1.)
 
@@ -135,34 +133,10 @@ def anneal_graphics(n=11, depth=10):
                 my_avg = lambda x, y: (x[0]*(1.-eps) + y[0]*eps, x[1]*(1.-eps)+y[1]*eps)
                 for v in G.pos:
                     G.pos[v] = my_avg(G.pos[v], delta_pos[v])
-
-                pl.clf()
-                nx.draw_networkx_edges(G, G.pos, alpha=.75, width=.5, style='dotted')
-                nx.draw_networkx_edges(T, G.pos, alpha=.5, width=2)
-                X = pl.array(G.pos.values())
-                pl.plot(X[:,0], X[:,1], 'bo', alpha=.5)
-                pl.plot([G.pos[root][0]], [G.pos[root][1]], 'bo', ms=12, mew=4, alpha=.95)
-
-                # display the most recently swapped edges
-                P = my_path_graph(T.path)
-                nx.draw_networkx_edges(P, G.pos, alpha=.25 + (nk-k)*.5/nk, width=4, edge_color='c')
-                P = my_path_graph([T.u_new, T.v_new])
-                P.add_edge(T.u_old, T.v_old)
-                nx.draw_networkx_edges(P, G.pos, alpha=.25 + k*.5/nk, width=4, edge_color='y')
-
-                # find and display the current longest path
-                path = nx.shortest_path(bdst.value, root)
-                furthest_leaf = max(path, key=lambda l: len(path[l]))
-                P = my_path_graph(path[furthest_leaf])
-                if len(path[furthest_leaf]) <= depth:
-                    col = 'g'
-                else:
-                    col = 'r'
-                nx.draw_networkx_edges(P, G.pos, alpha=.5, width=4, edge_color=col)
-                pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color=col, alpha=.8, fontsize=9)
+                graphics.plot_graph_and_tree(G, T, time=1.*k/nk)
                 str = ''
                 str += ' beta: %.1f\n' % beta.value
-                str += ' cur depth: %d (target: %d)\n' % (len(path[furthest_leaf]), depth)
+                str += ' cur depth: %d (target: %d)\n' % (T.depth, depth)
                 sm = mod_mc.step_method_dict[bdst][0]
                 str += ' accepted: %d of %d\n' % (sm.accepted, sm.accepted + sm.rejected)
                 pl.figtext(0, 0, str)
@@ -172,7 +146,6 @@ def anneal_graphics(n=11, depth=10):
                 pl.subplots_adjust(0, 0, 1, 1)
                 pl.savefig('t%06d.png' % (i*nj*nk + j*nk + k))
             print 'accepted:', mod_mc.step_method_dict[bdst][0].accepted
-            print 'cur depth:', len(path[furthest_leaf])
 
     import subprocess
     subprocess.call('mencoder mf://*.png -mf w=800:h=600 -ovc x264 -of avi -o G_%d_d_%d.avi' % (n, depth), shell=True)

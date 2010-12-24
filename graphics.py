@@ -47,10 +47,12 @@ def dual_edge(u, v):
     dy = .5 * (u[1] - v[1])
     return ((mx+dy, my+dx), (mx-dy, my-dx))
 
-def maze(T):
+def maze(G, T):
     """ Make a maze from the dual of the base graph minus the dual of the tree
 
-    Assumes that base graph is a grid with integer labels"""
+    Assumes that G is the base graph is a grid with integer labels
+    Note that T doesn't have to be a tree
+    """
 
     n = pl.sqrt(T.number_of_nodes())
 
@@ -58,7 +60,7 @@ def maze(T):
 
     # add dual complement edges
     for v in T.nodes():
-        for u in T.base_graph[v]:
+        for u in G[v]:
             if not T.has_edge(u,v):
                 D.add_edge(*dual_edge(u,v))
 
@@ -76,6 +78,13 @@ def maze(T):
     pos = {}
     for v in D.nodes():
         pos[v] = v
+        
+    # adjust node positions so they don't look so square
+    for v in pos:
+        eps = .04
+        pos[v] = [v[0] + eps*pl.randn(), v[1] + eps*pl.randn()]
 
     nx.draw_networkx_edges(D, pos, alpha=1., width=2, edge_color='k')
     pl.axis([-1, n, -1, n])
+    pl.axis('off')
+    pl.subplots_adjust(0, 0, 1, 1)

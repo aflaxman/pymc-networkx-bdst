@@ -1,6 +1,18 @@
 import networkx as nx
 import pylab as pl
 
+def split_edges(G):
+    """ Make a new graph with edges split
+    Assumes that all edges are named (x1,y1), (x2,y2))
+    """
+    H = nx.Graph()
+    for u,v in G.edges():
+        x1,y1=u
+        x2,y2=v
+        x3,y3=.5*(x1+x2), .5*(y1+y2)
+        H.add_edge((x1,y1), (x3,y3))
+        H.add_edge((x2,y2), (x3,y3))
+    return H
 
 def my_path_graph(path):
     G = nx.Graph()
@@ -74,16 +86,27 @@ def maze(G, T):
     # remove edges for start and end
     D.remove_edge((-.5,-.5), (-.5, .5))
     D.remove_edge((n-.5,n-1.5), (n-.5, n-.5))
+    
+    D = split_edges(D)
+    D = split_edges(D)
 
     pos = {}
     for v in D.nodes():
-        pos[v] = v
+        pos[v] = (v[0], n-1-v[1])
         
     # adjust node positions so they don't look so square
+    """spring_pos = nx.spring_layout(D, pos=pos,
+                                  fixed=[(2*i-.5, 2*j-.5) for i in range(n/2) for j in range(n/2)], iterations=10)
+    """
+    eps = .5
+    my_avg = lambda x, y: (x[0]*(1.-eps) + y[0]*eps, x[1]*(1.-eps)+y[1]*eps)
     for v in pos:
-        eps = .04
-        pos[v] = [v[0] + eps*pl.randn(), v[1] + eps*pl.randn()]
+        # splitting and springing looks pretty and curvy
+        #pos[v] = my_avg(pos[v], spring_pos[v])
 
+        # splitting and jittering looks like shakey pen
+        pos[v] = [v[0] + .1*eps*pl.randn(), v[1] + .1*eps*pl.randn()]
+        
     nx.draw_networkx_edges(D, pos, alpha=1., width=2, edge_color='k')
     pl.axis([-1, n, -1, n])
     pl.axis('off')

@@ -11,6 +11,29 @@ import networkx as nx
 import random
 import graphics
 reload(graphics)
+
+def im_st(fname, n=25):
+    from PIL import Image
+    im = Image.open(fname).resize((n,n))
+    pix = im.load()
+
+    G = nx.grid_graph([n,n])
+    for u in G.nodes():
+        G.node[u]['color'] = pix[u]
+
+    for u, v in G.edges():
+        G[u][v]['weight'] = pl.rand()
+
+    T = nx.minimum_spanning_tree(G)
+    for u, v in G.edges():
+        delta = pl.rms_flat(pix[u]) + pl.rms_flat(pix[v])
+        if delta < 100:
+            T.add_edge(u,v)
+            # instead of adding edges, penalize high degree nodes in this region
+    T.base_graph = G
+
+    return T
+
 def BDST(G, root=0, k=5, beta=1.):
     """ Create a PyMC Stochastic for a Bounded Depth Spanning Tree on
     base graph G

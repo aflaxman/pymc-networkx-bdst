@@ -26,7 +26,7 @@ def im_st(fname, n=25):
 
     T = nx.minimum_spanning_tree(G)
     for u, v in G.edges():
-        delta = pl.rms_flat(pix[u]) + pl.rms_flat(pix[v])
+        delta = pl.rms_flat(pix[u][:3]) + pl.rms_flat(pix[v][:3])
         if delta < 100:
             T.add_edge(u,v)
             # instead of adding edges, penalize high degree nodes in this region
@@ -57,7 +57,28 @@ def BDST(G, root=0, k=5, beta=1.):
 
     return bdst
 
-class BDSTMetropolis(mc.Metropolis):
+def LDST(G, d=3, beta=1.):
+    """ Create a PyMC Stochastic for a random lower degree Spanning Tree on
+    base graph G
+
+    Parameters
+    ----------
+    G : nx.Graph, base graph to span
+    d : int, degree bound parameter
+    beta : float, "inverse-temperature parameter" for depth bound
+    """
+
+    T = nx.minimum_spanning_tree(G)
+    T.base_graph = G
+    T.d = d
+
+    @mc.stoch(dtype=nx.Graph)
+    def ldst(value=T, beta=beta):
+        return -beta * pl.sum(pl.array(T.degree().values()) >= d)
+
+    return ldst
+
+class STMetropolis(mc.Metropolis):
     """ A PyMC Step Method that walks on spanning trees by adding a
     uniformly random edge not in the tree, removing a uniformly random
     edge from the cycle created, and keeping it with the appropriate
@@ -100,6 +121,29 @@ ni = 5
 nj = 100
 nk = 5
 
+def anneal_ldst(n=11):
+    beta = mc.Uninformative('beta', value=1.)
+
+    G = nx.grid_graph([n, n])
+    for u, v in G.edges():
+        G[u][v]['weight'] = random.random()
+
+    ldst = LDST(G, beta=beta)
+
+    mod_mc = mc.MCMC([beta, ldst])
+    mod_mc.use_step_method(STMetropolis, ldst)
+    mod_mc.use_step_method(mc.NoStepper, beta)
+
+    ni = 10
+    nj = 1000
+
+    for i in range(ni):
+        print 'phase %d' % (i+1),
+        beta.value = i*5
+        mod_mc.sample(nj, thin=10)
+        print 'frac of deg 2 vtx = %.2f' % pl.mean(pl.array(ldst.value.degree().values()) == 2)
+    return ldst.value
+
 def anneal_experiment(n=11, depth=10):
     beta = mc.Uninformative('beta', value=1.)
 
@@ -114,7 +158,7 @@ def anneal_experiment(n=11, depth=10):
         return T.max_depth
 
     mod_mc = mc.MCMC([beta, bdst, max_depth])
-    mod_mc.use_step_method(BDSTMetropolis, bdst)
+    mod_mc.use_step_method(STMetropolis, bdst)
     mod_mc.use_step_method(mc.NoStepper, beta)
 
     ni = 5
@@ -138,7 +182,7 @@ def anneal_graphics(n=11, depth=10):
     bdst = BDST(G, root, depth, beta)
 
     mod_mc = mc.MCMC([beta, bdst])
-    mod_mc.use_step_method(BDSTMetropolis, bdst)
+    mod_mc.use_step_method(STMetropolis, bdst)
     mod_mc.use_step_method(mc.NoStepper, beta)
 
     for i in range(ni):

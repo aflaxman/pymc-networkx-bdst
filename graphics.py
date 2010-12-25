@@ -107,10 +107,10 @@ def maze(G, T, fast=True):
         else:
             # splitting and springing looks pretty and curvy
             pos[v] = my_avg(pos[v], spring_pos[v])
-        
-    nx.draw_networkx_edges(D, pos, alpha=1., width=2, edge_color='k')
+
+    return D, pos
+
+def undecorate_plot(n):
     pl.axis([-1, n, -1, n])
     pl.axis('off')
     pl.subplots_adjust(0, 0, 1, 1)
-
-    return D, pos

@@ -59,7 +59,7 @@ def dual_edge(u, v):
     dy = .5 * (u[1] - v[1])
     return ((mx+dy, my+dx), (mx-dy, my-dx))
 
-def maze(G, T):
+def maze(G, T, fast=True):
     """ Make a maze from the dual of the base graph minus the dual of the tree
 
     Assumes that G is the base graph is a grid with integer labels
@@ -95,19 +95,22 @@ def maze(G, T):
         pos[v] = (v[0], n-1-v[1])
         
     # adjust node positions so they don't look so square
-    """spring_pos = nx.spring_layout(D, pos=pos,
-                                  fixed=[(2*i-.5, 2*j-.5) for i in range(n/2) for j in range(n/2)], iterations=10)
-    """
-    eps = .5
+    if not fast:
+        spring_pos = nx.spring_layout(D, pos=pos, fixed=set(D.nodes()) & set([(2*i-.5, 2*j-.5) for i in range(n/2) for j in range(n/2)]), iterations=10)
+
+    eps = .99
     my_avg = lambda x, y: (x[0]*(1.-eps) + y[0]*eps, x[1]*(1.-eps)+y[1]*eps)
     for v in pos:
-        # splitting and springing looks pretty and curvy
-        #pos[v] = my_avg(pos[v], spring_pos[v])
-
-        # splitting and jittering looks like shakey pen
-        pos[v] = [v[0] + .1*eps*pl.randn(), v[1] + .1*eps*pl.randn()]
+        if fast:
+            # splitting and jittering looks like shakey pen
+            pos[v] = [pos[v][0] + .05*eps*pl.randn(), pos[v][1] + .05*eps*pl.randn()]
+        else:
+            # splitting and springing looks pretty and curvy
+            pos[v] = my_avg(pos[v], spring_pos[v])
         
     nx.draw_networkx_edges(D, pos, alpha=1., width=2, edge_color='k')
     pl.axis([-1, n, -1, n])
     pl.axis('off')
     pl.subplots_adjust(0, 0, 1, 1)
+
+    return D, pos

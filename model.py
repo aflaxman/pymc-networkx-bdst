@@ -12,27 +12,34 @@ import random
 import graphics
 reload(graphics)
 
-def im_st(fname, n=25):
+def my_grid_graph(n):
+    G = nx.grid_graph([n,n])
+    for u,v in G.edges():
+        G[u][v]['weight'] = random.random()
+
+    G.pos = {}
+    for v in G:
+        G.pos[v] = [v[0], n-1-v[1]]
+
+    return G
+
+def image_grid_graph(fname, thresh=100., n=25):
     from PIL import Image
     im = Image.open(fname).resize((n,n))
     pix = im.load()
 
-    G = nx.grid_graph([n,n])
+    G = my_grid_graph(n)
     for u in G.nodes():
-        G.node[u]['color'] = pix[u]
+        G.node[u]['color'] = pl.array(pix[u])/256.
 
-    for u, v in G.edges():
-        G[u][v]['weight'] = pl.rand()
-
-    T = nx.minimum_spanning_tree(G)
+    H = nx.Graph()
     for u, v in G.edges():
         delta = pl.rms_flat(pix[u][:3]) + pl.rms_flat(pix[v][:3])
-        if delta < 100:
-            T.add_edge(u,v)
-            # instead of adding edges, penalize high degree nodes in this region
-    T.base_graph = G
+        if delta < thresh:
+            H.add_edge(u,v)
+    H.base_graph = G
 
-    return T
+    return H
 
 def BDST(G, root=0, k=5, beta=1.):
     """ Create a PyMC Stochastic for a Bounded Depth Spanning Tree on

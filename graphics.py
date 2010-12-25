@@ -77,7 +77,7 @@ def maze(G, T, fast=True):
                 D.add_edge(*dual_edge(u,v))
 
     # add boundry edges
-    for i in range(n):
+    for i in pl.arange(n):
         D.add_edge((-.5, i-.5), (-.5, i+.5))
         D.add_edge((n-.5, i-.5), (n-.5, i+.5))
         D.add_edge((i-.5, -.5), (i+.5, -.5))

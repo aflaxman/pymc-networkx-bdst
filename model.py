@@ -23,6 +23,11 @@ def my_grid_graph(n):
 
     return G
 
+def my_path_graph(path):
+    G = nx.Graph()
+    G.add_path(path)
+    return G
+
 def image_grid_graph(fname, thresh=100., n=25):
     from PIL import Image
     im = Image.open(fname).resize((n,n))

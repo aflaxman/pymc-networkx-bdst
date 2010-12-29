@@ -14,11 +14,6 @@ def split_edges(G):
         H.add_edge((x2,y2), (x3,y3))
     return H
 
-def my_path_graph(path):
-    G = nx.Graph()
-    G.add_path(path)
-    return G
-
 def plot_graph_and_tree(G, T, time):
     pl.clf()
     nx.draw_networkx_edges(G, G.pos, alpha=.75, width=.5, style='dotted')
@@ -59,7 +54,7 @@ def dual_edge(u, v):
     dy = .5 * (u[1] - v[1])
     return ((mx+dy, my+dx), (mx-dy, my-dx))
 
-def maze(G, T, fast=True):
+def layout_maze(G, T, fast=True):
     """ Make a maze from the dual of the base graph minus the dual of the tree
 
     Assumes that G is the base graph is a grid with integer labels
@@ -109,6 +104,21 @@ def maze(G, T, fast=True):
             pos[v] = my_avg(pos[v], spring_pos[v])
 
     return D, pos
+
+def plot_maze(D, D_pos, P, P_pos):
+    pl.figure(1)
+    pl.clf()
+    nx.draw_networkx_edges(D, D_pos, width=2, edge_color='k')
+    graphics.undecorate_plot(pl.sqrt(len(P_pos)))
+    pl.show()
+
+    pl.figure(2)
+    pl.clf()
+    nx.draw_networkx_edges(D, D_pos, width=2, edge_color='k')
+    nx.draw_networkx_edges(P, P_pos, width=3, alpha=1, edge_color='g')
+    graphics.undecorate_plot(pl.sqrt(len(P_pos)))
+    pl.show()
+
 
 def undecorate_plot(n):
     pl.axis([-1, n, -1, n])

@@ -1,5 +1,6 @@
 import networkx as nx
 import pylab as pl
+import model
 
 def split_edges(G):
     """ Make a new graph with edges split
@@ -14,33 +15,6 @@ def split_edges(G):
         H.add_edge((x2,y2), (x3,y3))
     return H
 
-def plot_graph_and_tree(G, T, time):
-    pl.clf()
-    nx.draw_networkx_edges(G, G.pos, alpha=.75, width=.5, style='dotted')
-    nx.draw_networkx_edges(T, G.pos, alpha=.5, width=2)
-    X = pl.array(G.pos.values())
-    pl.plot(X[:,0], X[:,1], 'bo', alpha=.5)
-    pl.plot([G.pos[T.root][0]], [G.pos[T.root][1]], 'bo', ms=12, mew=4, alpha=.95)
-
-    # display the most recently swapped edges
-    P = my_path_graph(T.path)
-    nx.draw_networkx_edges(P, G.pos, alpha=.25 + (1-time)*.5, width=4, edge_color='c')
-    P = my_path_graph([T.u_new, T.v_new])
-    P.add_edge(T.u_old, T.v_old)
-    nx.draw_networkx_edges(P, G.pos, alpha=.25 + (1-time)*.5, width=4, edge_color='y')
-
-    # find and display the current longest path
-    path = nx.shortest_path(T, T.root)
-    furthest_leaf = max(path, key=lambda l: len(path[l]))
-    P = my_path_graph(path[furthest_leaf])
-    if len(path[furthest_leaf]) <= T.k:
-        col = 'g'
-    else:
-        col = 'r'
-    nx.draw_networkx_edges(P, G.pos, alpha=.5, width=4, edge_color=col)
-    pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color=col, alpha=.8, fontsize=9)
-    T.depth = len(path[furthest_leaf])
-
 def dual_edge(u, v):
     """ Helper function to map an edge in a lattice to corresponding
     edge in dual lattice (it's just a rotation)
@@ -53,6 +27,38 @@ def dual_edge(u, v):
     dx = .5 * (u[0] - v[0])
     dy = .5 * (u[1] - v[1])
     return ((mx+dy, my+dx), (mx-dy, my-dx))
+
+
+def plot_graph_and_tree(G, T, time):
+    """ Plot a graph G and a tree T on top of it
+
+    Assumes that G has an embedding in the plane, represented as a dictionary G.pos"""
+
+    pl.clf()
+    nx.draw_networkx_edges(G, G.pos, alpha=.75, width=.5, style='dotted')
+    nx.draw_networkx_edges(T, G.pos, alpha=.5, width=2)
+    X = pl.array(G.pos.values())
+    pl.plot(X[:,0], X[:,1], 'bo', alpha=.5)
+    pl.plot([G.pos[T.root][0]], [G.pos[T.root][1]], 'bo', ms=12, mew=4, alpha=.95)
+
+    # display the most recently swapped edges
+    P = model.my_path_graph(T.path)
+    nx.draw_networkx_edges(P, G.pos, alpha=.25 + (1-time)*.5, width=4, edge_color='c')
+    P = model.my_path_graph([T.u_new, T.v_new])
+    P.add_edge(T.u_old, T.v_old)
+    nx.draw_networkx_edges(P, G.pos, alpha=.25 + (1-time)*.5, width=4, edge_color='y')
+
+    # find and display the current longest path
+    path = nx.shortest_path(T, T.root)
+    furthest_leaf = max(path, key=lambda l: len(path[l]))
+    P = model.my_path_graph(path[furthest_leaf])
+    if len(path[furthest_leaf]) <= T.k:
+        col = 'g'
+    else:
+        col = 'r'
+    nx.draw_networkx_edges(P, G.pos, alpha=.5, width=4, edge_color=col)
+    pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color=col, alpha=.8, fontsize=9)
+    T.depth = len(path[furthest_leaf])
 
 def layout_maze(G, T, fast=True):
     """ Make a maze from the dual of the base graph minus the dual of the tree
@@ -109,14 +115,14 @@ def plot_maze(D, D_pos, P, P_pos):
     pl.figure(1)
     pl.clf()
     nx.draw_networkx_edges(D, D_pos, width=2, edge_color='k')
-    graphics.undecorate_plot(pl.sqrt(len(P_pos)))
+    undecorate_plot(pl.sqrt(len(P_pos)))
     pl.show()
 
     pl.figure(2)
     pl.clf()
     nx.draw_networkx_edges(D, D_pos, width=2, edge_color='k')
     nx.draw_networkx_edges(P, P_pos, width=3, alpha=1, edge_color='g')
-    graphics.undecorate_plot(pl.sqrt(len(P_pos)))
+    undecorate_plot(pl.sqrt(len(P_pos)))
     pl.show()
 
 

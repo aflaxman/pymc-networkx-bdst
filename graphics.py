@@ -46,16 +46,17 @@ def plot_graph_and_tree(G, T, time):
     pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color=col, alpha=.8, fontsize=9)
     T.depth = len(path[furthest_leaf])
 
-def add_maze_boundary(D, n):
-    for i in pl.arange(n):
-        D.add_edge((-.5, i-.5), (-.5, i+.5))
-        D.add_edge((n-.5, i-.5), (n-.5, i+.5))
+def add_maze_boundary(D, shape):
+    for i in pl.arange(shape[0]):
         D.add_edge((i-.5, -.5), (i+.5, -.5))
-        D.add_edge((i-.5, n-.5), (i+.5, n-.5))
+        D.add_edge((i-.5, shape[1]-.5), (i+.5, shape[1]-.5))
+    for i in pl.arange(shape[1]):
+        D.add_edge((-.5, i-.5), (-.5, i+.5))
+        D.add_edge((shape[0]-.5, i-.5), (shape[0]-.5, i+.5))
 
-def make_entry_and_exit(D, n):
+def make_entry_and_exit(D, shape):
     D.remove_edge((-.5,-.5), (-.5, .5))
-    D.remove_edge((n-.5,n-1.5), (n-.5, n-.5))
+    D.remove_edge((shape[0]-.5,shape[1]-1.5), (shape[0]-.5, shape[1]-.5))
 
 def layout_maze(D, fast=True):
     """ Generate position dict for points in D
@@ -85,18 +86,18 @@ def plot_maze(D, D_pos, P, P_pos):
     pl.figure(1)
     pl.clf()
     nx.draw_networkx_edges(D, D_pos, width=2, edge_color='k')
-    undecorate_plot(pl.sqrt(len(P_pos)))
+    undecorate_plot(max(P.nodes()))
     pl.show()
 
     pl.figure(2)
     pl.clf()
     nx.draw_networkx_edges(D, D_pos, width=2, edge_color='k')
     nx.draw_networkx_edges(P, P_pos, width=3, alpha=1, edge_color='g')
-    undecorate_plot(pl.sqrt(len(P_pos)))
+    undecorate_plot(max(P.nodes()))
     pl.show()
 
 
-def undecorate_plot(n):
-    pl.axis([-1, n, -n, 1])
+def undecorate_plot(shape):
+    pl.axis([-1, shape[0], -shape[1], 1])
     pl.axis('off')
     pl.subplots_adjust(.01, .01, .99, .99)

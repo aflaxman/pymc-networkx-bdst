@@ -11,7 +11,7 @@ import maze
 
 class TestClass:
    def setUp(self):
-       self.G = model.my_grid_graph(5)
+       self.G = model.my_grid_graph([5, 5])
 
    def test_bdst(self):
        bdst = model.BDST(self.G, beta=0.)
@@ -29,14 +29,14 @@ class TestClass:
 
    def test_graph_utils(self):
        P = model.my_path_graph(model.nx.shortest_path(self.G, (0,0), (4,4)))
-       H = model.image_grid_graph('test.png', n=5)
+       H = model.image_grid_graph('test.png')
 
        d = model.dual_grid_edge((0,0), (0,1))
        assert d == ((-0.5, 0.5), (0.5, 0.5)), 'dual of integer lattice should be offset by .5s'
 
        D = model.dual_grid(H.base_graph, H)
-       graphics.add_maze_boundary(D, 5)
-       graphics.make_entry_and_exit(D, 5)
+       graphics.add_maze_boundary(D, [5,5])
+       graphics.make_entry_and_exit(D, [5,5])
        HH = graphics.split_edges(H)
 
    def test_maze_graphics(self):
@@ -54,12 +54,12 @@ class TestClass:
       maze.random_maze(5)
 
    def test_hidden_image_maze(self):
-      maze.hidden_image_maze('test.png', n=5, style='jittery')
-      maze.hidden_image_maze('test.png', n=5, style='smooth')
-      maze.hidden_image_maze('test.png', n=5, style='sketch')
+      maze.hidden_image_maze('test.png', style='jittery')
+      maze.hidden_image_maze('test.png', style='smooth')
+      maze.hidden_image_maze('test.png', style='sketch')
 
    def test_ld_maze(self):
       maze.ld_maze(n=5)
 
    def test_border_maze(self):
-      maze.border_maze('test.png', n=5)
+      maze.border_maze('test.png')

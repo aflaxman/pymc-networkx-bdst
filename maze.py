@@ -83,7 +83,7 @@ def ld_maze(n=25):
     graphics.plot_maze(D, D_pos, P, G.pos)
 
 
-def border_maze(fname='jessi.png', n=100):
+def border_maze(fname='jessi.png', n=100, fast=False):
     G = model.image_grid_graph(fname, colors=set([(255,255,255,255), (0,0,0,255)]), n=n)  # get a subgraph of the grid corresponding to edges between black and white
     H = model.image_grid_graph(fname, colors=set([(0,0,0,255)]), n=n)  # get a subgraph of the grid corresponding to edges between black pixels
     
@@ -96,7 +96,6 @@ def border_maze(fname='jessi.png', n=100):
 
     # add border edges to G
     B = model.image_grid_graph(fname, colors=set([(255,255,255,255), (0,0,0,255), (255,0,0,255)]), n=n)
-    print B.number_of_edges()
     for u,v in B.edges():
         G.add_edge(u,v)
 
@@ -106,7 +105,8 @@ def border_maze(fname='jessi.png', n=100):
 
     # generate the dual graph, including edges not crossed by the spanning tree
     D = model.dual_grid(G, T)
-    pos = graphics.layout_maze(D, fast=True)
+    D = graphics.split_edges(D)
+    pos = graphics.layout_maze(D, fast=fast)
     graphics.plot_maze(D, pos, P, G_pos)
 
     # show the pixel colors loaded from the file, for "debugging"

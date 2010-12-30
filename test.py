@@ -36,10 +36,24 @@ class TestClass:
 
    def test_maze_graphics(self):
        T = model.anneal_ldst(n=5, phases=1, iters=1)
-       D, D_pos = graphics.layout_maze(self.G, T)
+       D, D_pos = graphics.layout_maze(self.G, T, 5)
        graphics.plot_maze(D, D_pos, T, self.G.pos)
  
        T.root = (0,0)
        T.k = 5
 
        graphics.plot_graph_and_tree(self.G, T, 0)
+
+   def test_random_maze(self):
+      maze.random_maze(5)
+
+   def test_hidden_image_maze(self):
+      maze.hidden_image_maze('test.png', n=5, style='jittery')
+      maze.hidden_image_maze('test.png', n=5, style='smooth')
+      maze.hidden_image_maze('test.png', n=5, style='sketch')
+
+   def test_ld_maze(self):
+      maze.ld_maze(n=5)
+
+   def test_border_maze(self):
+      maze.border_maze('test.png', n=5)

@@ -60,15 +60,12 @@ def plot_graph_and_tree(G, T, time):
     pl.text(G.pos[furthest_leaf][0], G.pos[furthest_leaf][1], '%d hops from root'%len(path[furthest_leaf]), color=col, alpha=.8, fontsize=9)
     T.depth = len(path[furthest_leaf])
 
-def layout_maze(G, T, fast=True):
+def layout_maze(G, T, n, subdivisions=2, fast=True):
     """ Make a maze from the dual of the base graph minus the dual of the tree
 
     Assumes that G is the base graph is a grid with integer labels
     Note that T doesn't have to be a tree
     """
-
-    n = pl.sqrt(T.number_of_nodes())
-
     D = nx.Graph()
 
     # add dual complement edges
@@ -85,11 +82,13 @@ def layout_maze(G, T, fast=True):
         D.add_edge((i-.5, n-.5), (i+.5, n-.5))
 
     # remove edges for start and end
+    D.add_edge((-.5,-.5), (-.5, .5))
+    D.add_edge((n-.5,n-1.5), (n-.5, n-.5))
     D.remove_edge((-.5,-.5), (-.5, .5))
     D.remove_edge((n-.5,n-1.5), (n-.5, n-.5))
     
-    D = split_edges(D)
-    D = split_edges(D)
+    for i in range(subdivisions):
+        D = split_edges(D)
 
     pos = {}
     for v in D.nodes():
@@ -97,7 +96,7 @@ def layout_maze(G, T, fast=True):
         
     # adjust node positions so they don't look so square
     if not fast:
-        spring_pos = nx.spring_layout(D, pos=pos, fixed=set(D.nodes()) & set([(2*i-.5, 2*j-.5) for i in range(n/2) for j in range(n/2)]), iterations=10)
+        spring_pos = nx.spring_layout(D, pos=pos, fixed=set(D.nodes()) & set([(2*i-.5, 2*j-.5) for i in pl.arange(n/2) for j in pl.arange(n/2)]), iterations=10)
 
     eps = .99
     my_avg = lambda x, y: (x[0]*(1.-eps) + y[0]*eps, x[1]*(1.-eps)+y[1]*eps)
@@ -129,4 +128,4 @@ def plot_maze(D, D_pos, P, P_pos):
 def undecorate_plot(n):
     pl.axis([-1, n, -1, n])
     pl.axis('off')
-    pl.subplots_adjust(0, 0, 1, 1)
+    pl.subplots_adjust(.01, .01, .99, .99)

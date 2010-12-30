@@ -13,9 +13,9 @@ def random_maze(n=25):
     G = model.my_grid_graph(n)
 
     T = nx.minimum_spanning_tree(G)
-    P = graphics.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
+    P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
-    D, pos = graphics.layout_maze(G, T, fast=True)
+    D, pos = graphics.layout_maze(G, T, n, fast=True)
     graphics.plot_maze(D, pos, P, G.pos)
 
 
@@ -32,18 +32,18 @@ def hidden_image_maze(fname, n=25, style='jittery'):
     T = nx.minimum_spanning_tree(G)
 
     # find the maze solution in the spanning tree
-    P = graphics.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
+    P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
     # generate the dual graph, including edges not crossed by the spanning tree
-    D, pos = graphics.layout_maze(G, T, fast=(style == 'jittery'))
+    D, pos = graphics.layout_maze(G, T, n, fast=(style == 'jittery'))
     graphics.plot_maze(D, pos, P, G.pos)
 
     # make it stylish if requested
     if style == 'sketch':
         pl.figure(1)
-        D, D_pos = graphics.maze(G, T, fast=True)
+        D, D_pos = graphics.layout_maze(G, T, n, fast=True)
         nx.draw_networkx_edges(D, D_pos, width=1, edge_color='k')
-        D, D_pos = graphics.maze(G, T, fast=True)
+        D, D_pos = graphics.layout_maze(G, T, n, fast=True)
         nx.draw_networkx_edges(D, D_pos, width=1, edge_color='k')
 
     
@@ -68,9 +68,40 @@ def ld_maze(n=25):
     mod_mc.sample(100, burn=99)
     T = T.value
 
-    P = graphics.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
+    P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
-    D, D_pos = graphics.layout_maze(G, T, fast=False)
+    D, D_pos = graphics.layout_maze(G, T, n, fast=False)
     graphics.plot_maze(D, D_pos, P, G.pos)
 
 
+def border_maze(fname='jessi.png', n=100):
+    G = model.image_grid_graph(fname, colors=set([(255,255,255,255), (0,0,0,255)]), n=n)  # get a subgraph of the grid corresponding to edges between black and white
+    H = model.image_grid_graph(fname, colors=set([(0,0,0,255)]), n=n)  # get a subgraph of the grid corresponding to edges between black pixels
+    
+    # for every edge in H, make the corresponding edge in G have weight 0
+    for u,v in G.edges():
+        G[u][v]['weight'] = (H.has_edge(u,v) and -1.) or G.base_graph[u][v]['weight']
+
+    # find a minimum spanning tree on G (which will include the maze solution)
+    T = nx.minimum_spanning_tree(G)
+
+    # add border edges to G
+    B = model.image_grid_graph(fname, colors=set([(255,255,255,255), (0,0,0,255), (255,0,0,255)]), n=n)
+    print B.number_of_edges()
+    for u,v in B.edges():
+        G.add_edge(u,v)
+
+    # find the maze solution in the spanning tree
+    P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
+    G_pos = G.base_graph.pos
+
+    # generate the dual graph, including edges not crossed by the spanning tree
+    D, pos = graphics.layout_maze(G, T, n, subdivisions=0, fast=True)
+    graphics.plot_maze(D, pos, P, G_pos)
+
+    # show the pixel colors loaded from the file, for "debugging"
+    pl.figure(2)
+    for v in G:
+        pl.plot([G_pos[v][0]], [G_pos[v][1]], '.', alpha=.5, color=G.base_graph.node[v]['color'])
+
+    return G, H, T, B

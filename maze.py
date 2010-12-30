@@ -15,7 +15,8 @@ def random_maze(n=25):
     T = nx.minimum_spanning_tree(G)
     P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
-    D, pos = graphics.layout_maze(G, T, n, fast=True)
+    D = model.dual_grid(G, T)
+    pos = graphics.layout_maze(D, fast=True)
     graphics.plot_maze(D, pos, P, G.pos)
 
 
@@ -35,15 +36,18 @@ def hidden_image_maze(fname, n=25, style='jittery'):
     P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
     # generate the dual graph, including edges not crossed by the spanning tree
-    D, pos = graphics.layout_maze(G, T, n, fast=(style == 'jittery'))
+    D = model.dual_grid(G, T)
+    graphics.add_maze_boundary(D, n)
+    graphics.make_entry_and_exit(D, n)
+    pos = graphics.layout_maze(D, fast=(style == 'jittery'))
     graphics.plot_maze(D, pos, P, G.pos)
 
     # make it stylish if requested
     if style == 'sketch':
         pl.figure(1)
-        D, D_pos = graphics.layout_maze(G, T, n, fast=True)
+        D_pos = graphics.layout_maze(D, fast=True)
         nx.draw_networkx_edges(D, D_pos, width=1, edge_color='k')
-        D, D_pos = graphics.layout_maze(G, T, n, fast=True)
+        D_pos = graphics.layout_maze(D, fast=True)
         nx.draw_networkx_edges(D, D_pos, width=1, edge_color='k')
 
     
@@ -70,7 +74,12 @@ def ld_maze(n=25):
 
     P = model.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
-    D, D_pos = graphics.layout_maze(G, T, n, fast=False)
+    D = model.dual_grid(G, T)
+    graphics.add_maze_boundary(D, n)
+    graphics.make_entry_and_exit(D, n)
+    D = graphics.split_edges(D)
+    D = graphics.split_edges(D)
+    D_pos = graphics.layout_maze(D, fast=False)
     graphics.plot_maze(D, D_pos, P, G.pos)
 
 
@@ -96,7 +105,8 @@ def border_maze(fname='jessi.png', n=100):
     G_pos = G.base_graph.pos
 
     # generate the dual graph, including edges not crossed by the spanning tree
-    D, pos = graphics.layout_maze(G, T, n, subdivisions=0, fast=True)
+    D = model.dual_grid(G, T)
+    pos = graphics.layout_maze(D, fast=True)
     graphics.plot_maze(D, pos, P, G_pos)
 
     # show the pixel colors loaded from the file, for "debugging"

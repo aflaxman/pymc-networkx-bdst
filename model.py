@@ -23,9 +23,34 @@ def my_grid_graph(n):
 
     G.pos = {}
     for v in G:
-        G.pos[v] = [v[0], n-1-v[1]]
+        G.pos[v] = [v[0], -v[1]]
 
     return G
+
+def dual_grid_edge(u, v):
+    """ Helper function to map an edge in a lattice to corresponding
+    edge in dual lattice (it's just a rotation)
+    """
+    mx = .5 * (u[0] + v[0])
+    my = .5 * (u[1] + v[1])
+    dx = .5 * (u[0] - v[0])
+    dy = .5 * (u[1] - v[1])
+    return ((mx+dy, my+dx), (mx-dy, my-dx))
+
+def dual_grid(G, T):
+    """ Make a maze from the dual of G minus the dual of T
+
+    Assumes that G is the base graph is a grid with integer labels
+    Note that T doesn't have to be a tree
+    """
+    D = nx.Graph()
+
+    # add dual complement edges
+    for v in T.nodes():
+        for u in G[v]:
+            if not T.has_edge(u,v):
+                D.add_edge(*dual_grid_edge(u,v))
+    return D
 
 def my_path_graph(path):
     """ Create a graph by connecting vertices on path

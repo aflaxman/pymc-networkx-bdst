@@ -29,14 +29,20 @@ class TestClass:
 
    def test_graph_utils(self):
        P = model.my_path_graph(model.nx.shortest_path(self.G, (0,0), (4,4)))
-       H = model.image_grid_graph('test.png')
+       H = model.image_grid_graph('test.png', n=5)
 
+       d = model.dual_grid_edge((0,0), (0,1))
+       assert d == ((-0.5, 0.5), (0.5, 0.5)), 'dual of integer lattice should be offset by .5s'
+
+       D = model.dual_grid(H.base_graph, H)
+       graphics.add_maze_boundary(D, 5)
+       graphics.make_entry_and_exit(D, 5)
        HH = graphics.split_edges(H)
-       d = graphics.dual_edge(*H.edges()[0])
 
    def test_maze_graphics(self):
        T = model.anneal_ldst(n=5, phases=1, iters=1)
-       D, D_pos = graphics.layout_maze(self.G, T, 5)
+       D = model.dual_grid(self.G, T)
+       D_pos = graphics.layout_maze(D)
        graphics.plot_maze(D, D_pos, T, self.G.pos)
  
        T.root = (0,0)

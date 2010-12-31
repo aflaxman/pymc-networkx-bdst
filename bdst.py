@@ -55,12 +55,13 @@ def anneal_w_graphics(n=11, depth=10):
                 pl.axis([-1, n, -1, n])
                 pl.axis('off')
                 pl.subplots_adjust(0, 0, 1, 1)
-                pl.savefig('t%06d.png' % (i*nj*nk + j*nk + k))
+                pl.savefig('bdst%06d.png' % (i*nj*nk + j*nk + k))
             print 'accepted:', mod_mc.step_method_dict[bdst][0].accepted
 
     import subprocess
-    subprocess.call('mencoder mf://*.png -mf w=800:h=600 -ovc x264 -of avi -o G_%d_d_%d.avi' % (n, depth), shell=True)
-    subprocess.call('mplayer -loop 0 G_%d_d_%d.avi' % (n, depth), shell=True)
+    subprocess.call('mencoder mf://bdst*.png -mf w=800:h=600 -ovc x264 -of avi -o bdst_G_%d_d_%d.avi' % (n, depth), shell=True)
+    subprocess.call('mplayer -loop 0 bdst_G_%d_d_%d.avi' % (n, depth), shell=True)
+    subprocess.call('rm bdst*.png')
 
     return bdst.value
 

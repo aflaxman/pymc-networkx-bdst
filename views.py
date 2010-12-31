@@ -1,6 +1,6 @@
 import networkx as nx
 import pylab as pl
-import model
+import models
 
 def split_edges(G):
     """ Make a new graph with edges split
@@ -28,16 +28,16 @@ def plot_graph_and_tree(G, T, time):
     pl.plot([G.pos[T.root][0]], [G.pos[T.root][1]], 'bo', ms=12, mew=4, alpha=.95)
 
     # display the most recently swapped edges
-    P = model.my_path_graph(T.path)
+    P = models.my_path_graph(T.path)
     nx.draw_networkx_edges(P, G.pos, alpha=.25 + (1-time)*.5, width=4, edge_color='c')
-    P = model.my_path_graph([T.u_new, T.v_new])
+    P = models.my_path_graph([T.u_new, T.v_new])
     P.add_edge(T.u_old, T.v_old)
     nx.draw_networkx_edges(P, G.pos, alpha=.25 + (1-time)*.5, width=4, edge_color='y')
 
     # find and display the current longest path
     path = nx.shortest_path(T, T.root)
     furthest_leaf = max(path, key=lambda l: len(path[l]))
-    P = model.my_path_graph(path[furthest_leaf])
+    P = models.my_path_graph(path[furthest_leaf])
     if len(path[furthest_leaf]) <= T.k:
         col = 'g'
     else:

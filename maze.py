@@ -83,7 +83,7 @@ def ld_maze(n=25):
     views.plot_maze(D, D_pos, P, G.pos)
 
 
-def border_maze(fname='jessi.png', fast=True):
+def border_maze(fname='test.png', fast=True):
     G = models.image_grid_graph(fname, colors=set([(255,255,255,255), (0,0,0,255)]))  # get a subgraph of the grid corresponding to edges between black and white
     H = models.image_grid_graph(fname, colors=set([(0,0,0,255)]))  # get a subgraph of the grid corresponding to edges between black pixels
     

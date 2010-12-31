@@ -1,5 +1,6 @@
-*.png
-*.avi
 *~
 *.pyc
+*.jpg
+*.png
 *.svg
+*.avi

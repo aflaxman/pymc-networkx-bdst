@@ -147,7 +147,7 @@ class STMetropolis(mc.Metropolis):
 
         T.u_new, T.v_new = T.edges()[0]
         while T.has_edge(T.u_new, T.v_new):
-            T.u_new, T.v_new = random.sample(T.base_graph.edges(), 1)[0]
+            T.u_new, T.v_new = random.choice(T.base_graph.edges())
 
         T.path = nx.shortest_path(T, T.u_new, T.v_new)
         i = random.randrange(len(T.path)-1)

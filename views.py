@@ -98,6 +98,6 @@ def plot_maze(D, D_pos, P, P_pos):
 
 
 def undecorate_plot(shape):
-    pl.axis([-1, shape[0], -shape[1]-1, 1])
+    pl.axis([-1, shape[0]+1, -shape[1]-1, 1])
     pl.axis('off')
     pl.subplots_adjust(.01, .01, .99, .99)

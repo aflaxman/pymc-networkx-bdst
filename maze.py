@@ -16,6 +16,8 @@ def random_maze(n=25):
     P = models.my_path_graph(nx.shortest_path(T, (0,0), (n-1, n-1)))
 
     D = models.dual_grid(G, T)
+    views.add_maze_boundary(D, [n, n])
+    views.make_entry_and_exit(D, [n, n])
     pos = views.layout_maze(D, fast=True)
     views.plot_maze(D, pos, P, G.pos)
 

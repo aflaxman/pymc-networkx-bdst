@@ -10,7 +10,6 @@ import pymc as mc
 import networkx as nx
 import random
 import views
-reload(views)
 
 def my_grid_graph(shape):
     """ Create an nxn grid graph, with uniformly random edge weights,
@@ -99,7 +98,7 @@ def BDST(G, root=(0,0), k=5, beta=1.):
 
     @mc.stoch(dtype=nx.Graph)
     def bdst(value=T, root=root, k=k, beta=beta):
-        path_len = pl.array(nx.shortest_path_length(value, root).values())
+        path_len = pl.array(list(nx.shortest_path_length(value, root).values()))
         return -beta * pl.sum(path_len > k)
 
     return bdst
@@ -121,7 +120,7 @@ def LDST(G, d=3, beta=1.):
 
     @mc.stoch(dtype=nx.Graph)
     def ldst(value=T, beta=beta):
-        return -beta * pl.sum(pl.array(T.degree().values()) >= d)
+        return -beta * pl.sum(pl.array(list(T.degree().values())) >= d)
 
     return ldst
 
@@ -139,7 +138,7 @@ class STMetropolis(mc.Metropolis):
     """
     def __init__(self, stochastic):
         # Initialize superclass
-        mc.Metropolis.__init__(self, stochastic, scale=1., verbose=None, tally=False)
+        mc.Metropolis.__init__(self, stochastic, scale=1., verbose=0, tally=False)
 
     def propose(self):
         """ Add an edge and remove an edge from the cycle that it creates"""
@@ -186,10 +185,10 @@ def anneal_ldst(n=11, phases=10, iters=1000):
     mod_mc.use_step_method(mc.NoStepper, beta)
 
     for i in range(phases):
-        print 'phase %d' % (i+1),
+        print('phase %d' % (i+1),)
         beta.value = i*5
         mod_mc.sample(iters, burn=iters-1)
-        print 'frac of deg 2 vtx = %.2f' % pl.mean(pl.array(ldst.value.degree().values()) == 2)
+        print('frac of deg 2 vtx = %.2f' % pl.mean(pl.array(ldst.value.degree().values()) == 2))
     return ldst.value
 
 def anneal_bdst(n=11, depth=10, phases=10, iters=1000):
@@ -223,7 +222,7 @@ def anneal_bdst(n=11, depth=10, phases=10, iters=1000):
     for i in range(phases):
         beta.value = i*5
         mod_mc.sample(iters, thin=max(1, iters/100))
-        print 'cur depth', max_depth.value
-        print 'pct of trace with max_depth <= depth', pl.mean(mod_mc.trace(max_depth) <= depth)
+        print('cur depth', max_depth.value)
+        print('pct of trace with max_depth <= depth', pl.mean(mod_mc.trace(max_depth)[:] <= depth))
     return bdst.value
 

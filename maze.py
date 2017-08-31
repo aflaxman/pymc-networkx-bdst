@@ -7,7 +7,6 @@ import random
 
 import models
 import views
-reload(models); reload(views)
 
 def random_maze(n=25):
     G = models.my_grid_graph([n,n])

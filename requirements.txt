@@ -1,0 +1,6 @@
+numpy
+matplotlib
+pylab
+pymc
+networkx
+Pillow

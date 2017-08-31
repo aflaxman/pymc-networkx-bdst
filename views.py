@@ -23,7 +23,7 @@ def plot_graph_and_tree(G, T, time):
     pl.clf()
     nx.draw_networkx_edges(G, G.pos, alpha=.75, width=.5, style='dotted')
     nx.draw_networkx_edges(T, G.pos, alpha=.5, width=2)
-    X = pl.array(G.pos.values())
+    X = pl.array(list(G.pos.values()))
     pl.plot(X[:,0], X[:,1], 'bo', alpha=.5)
     pl.plot([G.pos[T.root][0]], [G.pos[T.root][1]], 'bo', ms=12, mew=4, alpha=.95)
 

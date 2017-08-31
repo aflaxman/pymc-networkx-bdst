@@ -6,7 +6,7 @@ Here is a model to explore the issue
 """
 
 import pylab as pl
-import pymc as mc
+import pymc as pm
 import networkx as nx
 import random
 import views
@@ -96,7 +96,7 @@ def BDST(G, root=(0,0), k=5, beta=1.):
     T.root = root
     T.k = k
 
-    @mc.stoch(dtype=nx.Graph)
+    @pm.stoch(dtype=nx.Graph)
     def bdst(value=T, root=root, k=k, beta=beta):
         path_len = pl.array(list(nx.shortest_path_length(value, root).values()))
         return -beta * pl.sum(path_len > k)
@@ -118,13 +118,13 @@ def LDST(G, d=3, beta=1.):
     T.base_graph = G
     T.d = d
 
-    @mc.stoch(dtype=nx.Graph)
+    @pm.stoch(dtype=nx.Graph)
     def ldst(value=T, beta=beta):
         return -beta * pl.sum(pl.array(list(T.degree().values())) >= d)
 
     return ldst
 
-class STMetropolis(mc.Metropolis):
+class STMetropolis(pm.Metropolis):
     """ A PyMC Step Method that walks on spanning trees by adding a
     uniformly random edge not in the tree, removing a uniformly random
     edge from the cycle created, and keeping it with the appropriate
@@ -138,7 +138,7 @@ class STMetropolis(mc.Metropolis):
     """
     def __init__(self, stochastic):
         # Initialize superclass
-        mc.Metropolis.__init__(self, stochastic, scale=1., verbose=0, tally=False)
+        pm.Metropolis.__init__(self, stochastic, scale=1., verbose=0, tally=False)
 
     def propose(self):
         """ Add an edge and remove an edge from the cycle that it creates"""
@@ -177,12 +177,12 @@ def anneal_ldst(n=11, phases=10, iters=1000):
     -------
     T : nx.Graph, spanning tree with T.base_graph, with few degree 3 vertices
     """
-    beta = mc.Uninformative('beta', value=1.)
+    beta = pm.Uninformative('beta', value=1.)
     ldst = LDST(my_grid_graph([n,n]), beta=beta)
 
-    mod_mc = mc.MCMC([beta, ldst])
+    mod_mc = pm.MCMC([beta, ldst])
     mod_mc.use_step_method(STMetropolis, ldst)
-    mod_mc.use_step_method(mc.NoStepper, beta)
+    mod_mc.use_step_method(pm.NoStepper, beta)
 
     for i in range(phases):
         print('phase %d' % (i+1),)
@@ -203,21 +203,21 @@ def anneal_bdst(n=11, depth=10, phases=10, iters=1000):
     T : nx.Graph, spanning tree with T.base_graph, possibly with degree bound satisfied
     """
 
-    beta = mc.Uninformative('beta', value=1.)
+    beta = pm.Uninformative('beta', value=1.)
 
     G = nx.grid_graph([n, n])
     root = ((n-1)/2, (n-1)/2)
     bdst = BDST(G, root, depth, beta)
 
-    @mc.deterministic
+    @pm.deterministic
     def max_depth(T=bdst, root=root):
         shortest_path_length = nx.shortest_path_length(T, root)
         T.max_depth = max(shortest_path_length.values())
         return T.max_depth
 
-    mod_mc = mc.MCMC([beta, bdst, max_depth])
+    mod_mc = pm.MCMC([beta, bdst, max_depth])
     mod_mc.use_step_method(STMetropolis, bdst)
-    mod_mc.use_step_method(mc.NoStepper, beta)
+    mod_mc.use_step_method(pm.NoStepper, beta)
 
     for i in range(phases):
         beta.value = i*5

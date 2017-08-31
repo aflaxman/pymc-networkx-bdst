@@ -1,7 +1,7 @@
 """ Script to generate movie of MCMC search for a bounded-depth spanning tree
 """
 
-import pylab as pl
+import matplotlib.pylot as plt
 import pymc as mc
 import networkx as nx
 import random
@@ -50,12 +50,12 @@ def anneal_w_graphics(n=11, depth=10):
                 str += ' cur depth: %d (target: %d)\n' % (T.depth, depth)
                 sm = mod_mc.step_method_dict[bdst][0]
                 str += ' accepted: %d of %d\n' % (sm.accepted, sm.accepted + sm.rejected)
-                pl.figtext(0, 0, str)
-                pl.figtext(1, 0, 'healthyalgorithms.wordpress.com \n', ha='right')
-                pl.axis([-1, n, -1, n])
-                pl.axis('off')
-                pl.subplots_adjust(0, 0, 1, 1)
-                pl.savefig('bdst%06d.png' % (i*nj*nk + j*nk + k))
+                plt.figtext(0, 0, str)
+                plt.figtext(1, 0, 'healthyalgorithms.wordpress.com \n', ha='right')
+                plt.axis([-1, n, -1, n])
+                plt.axis('off')
+                plt.subplots_adjust(0, 0, 1, 1)
+                plt.savefig('bdst%06d.png' % (i*nj*nk + j*nk + k))
             print 'accepted:', mod_mc.step_method_dict[bdst][0].accepted
 
     import subprocess

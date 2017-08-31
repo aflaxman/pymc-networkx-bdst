@@ -1,6 +1,7 @@
 """ Script to generate mazes using grid graphs and spanning trees"""
 
-import pylab as pl
+import numpy as np
+import matplotlib.pyplot as plt
 import pymc as mc
 import networkx as nx
 import random
@@ -45,7 +46,7 @@ def hidden_image_maze(fname, style='jittery'):
 
     # make it stylish if requested
     if style == 'sketch':
-        pl.figure(1)
+        plt.figure(1)
         D_pos = views.layout_maze(D, fast=True)
         nx.draw_networkx_edges(D, D_pos, width=1, edge_color='k')
         D_pos = views.layout_maze(D, fast=True)
@@ -53,9 +54,9 @@ def hidden_image_maze(fname, style='jittery'):
 
     
     # show the pixel colors loaded from the file, for "debugging"
-    pl.figure(2)
+    plt.figure(2)
     for v in G:
-        pl.plot([G.pos[v][0]], [G.pos[v][1]], '.', alpha=.5, color=G.node[v]['color'])
+        plt.plot([G.pos[v][0]], [G.pos[v][1]], '.', alpha=.5, color=G.node[v]['color'])
 
 
 def ld_maze(n=25):
@@ -119,8 +120,8 @@ def border_maze(fname='test.png', fast=True):
     views.plot_maze(D, pos, P, G_pos)
 
     # show the pixel colors loaded from the file, for "debugging"
-    pl.figure(2)
+    plt.figure(2)
     for v in G:
-        pl.plot([G_pos[v][0]], [G_pos[v][1]], '.', alpha=.5, color=G.base_graph.node[v]['color'])
+        plt.plot([G_pos[v][0]], [G_pos[v][1]], '.', alpha=.5, color=G.base_graph.node[v]['color'])
 
     return dict(G=G, H=H, T=T, P=P, B=B)

@@ -5,7 +5,7 @@ Here is a model to explore the issue
 [1] http://cstheory.stackexchange.com/questions/3913/how-can-i-randomly-generate-bounded-height-spanning-trees
 """
 
-import pylab as pl
+import numpy as np
 import pymc as pm
 import networkx as nx
 import random
@@ -70,7 +70,7 @@ def image_grid_graph(fname, colors=set([(0,0,0,255)])):
 
     G = my_grid_graph(im.size)
     for u in G.nodes():
-        G.node[u]['color'] = pl.array(pix[u])/256.
+        G.node[u]['color'] = np.array(pix[u])/256.
 
     H = nx.Graph()
     for u, v in G.edges():
@@ -98,8 +98,8 @@ def BDST(G, root=(0,0), k=5, beta=1.):
 
     @pm.stoch(dtype=nx.Graph)
     def bdst(value=T, root=root, k=k, beta=beta):
-        path_len = pl.array(list(nx.shortest_path_length(value, root).values()))
-        return -beta * pl.sum(path_len > k)
+        path_len = np.array(list(nx.shortest_path_length(value, root).values()))
+        return -beta * np.sum(path_len > k)
 
     return bdst
 
@@ -120,7 +120,7 @@ def LDST(G, d=3, beta=1.):
 
     @pm.stoch(dtype=nx.Graph)
     def ldst(value=T, beta=beta):
-        return -beta * pl.sum(pl.array(list(T.degree().values())) >= d)
+        return -beta * np.sum(np.array(list(T.degree().values())) >= d)
 
     return ldst
 
@@ -188,7 +188,7 @@ def anneal_ldst(n=11, phases=10, iters=1000):
         print('phase %d' % (i+1),)
         beta.value = i*5
         mod_mc.sample(iters, burn=iters-1)
-        print('frac of deg 2 vtx = %.2f' % pl.mean(pl.array(ldst.value.degree().values()) == 2))
+        print('frac of deg 2 vtx = %.2f' % np.mean(np.array(ldst.value.degree().values()) == 2))
     return ldst.value
 
 def anneal_bdst(n=11, depth=10, phases=10, iters=1000):
@@ -223,6 +223,6 @@ def anneal_bdst(n=11, depth=10, phases=10, iters=1000):
         beta.value = i*5
         mod_mc.sample(iters, thin=max(1, iters/100))
         print('cur depth', max_depth.value)
-        print('pct of trace with max_depth <= depth', pl.mean(mod_mc.trace(max_depth)[:] <= depth))
+        print('pct of trace with max_depth <= depth', np.mean(mod_mc.trace(max_depth)[:] <= depth))
     return bdst.value
 

@@ -110,7 +110,7 @@ def border_maze(fname='test.png', fast=True):
             G[u][v]['weight'] = 1e6
     for u,v in T.edges():
         G[u][v]['weight'] = 0
-    P = models.my_path_graph(nx.shortest_path(G, (0,0), max(G.nodes()), weighted=True))
+    P = models.my_path_graph(nx.shortest_path(G, (0,0), max(G.nodes()), weight='weight'))
     G_pos = G.base_graph.pos
 
     # generate the dual graph, including edges not crossed by the spanning tree

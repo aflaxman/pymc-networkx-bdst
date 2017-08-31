@@ -4,3 +4,4 @@
 *.png
 *.svg
 *.avi
+.cache/

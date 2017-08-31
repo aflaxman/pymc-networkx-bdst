@@ -5,12 +5,12 @@ import matplotlib
 matplotlib.use("AGG") 
 
 
-import model
-import graphics
+import models as model
+import views as graphics
 import maze
 
 class TestClass:
-   def setUp(self):
+   def setup(self):
        self.G = model.my_grid_graph([5, 5])
 
    def test_bdst(self):

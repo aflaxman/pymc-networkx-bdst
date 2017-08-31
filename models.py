@@ -139,7 +139,7 @@ class STMetropolis(mc.Metropolis):
     """
     def __init__(self, stochastic):
         # Initialize superclass
-        mc.Metropolis.__init__(self, stochastic, scale=1., proposal_sd='custom', proposal_distribution='custom', verbose=None, tally=False)
+        mc.Metropolis.__init__(self, stochastic, scale=1., verbose=None, tally=False)
 
     def propose(self):
         """ Add an edge and remove an edge from the cycle that it creates"""
